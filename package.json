@@ -1,0 +1,35 @@
+{
+  "name": "object-alias",
+  "version": "0.0.1",
+  "author": {
+    "name": "Tor Brekke Skjøtskift",
+    "email": "tor.skjotskift@amedia.no"
+  },
+  "description": "create a new object with properties that aliases to another object",
+  "main": "./index.js",
+  "keywords": [
+    "json-pointer",
+    "json"
+  ],
+  "scripts": {
+    "start": "node ./index.js",
+    "test": "./node_modules/.bin/mocha --reporter spec --ui bdd"
+  },
+  "engines": {
+    "node": "0.10.x"
+  },
+  "bugs": {
+    "url": "https://github.com/amedia/javascript-modules/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:amedia/javascript-modules.git"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "mocha": "^2.0.1"
+  },
+  "dependencies": {
+    "simple-json-pointer": "latest"
+  }
+}
