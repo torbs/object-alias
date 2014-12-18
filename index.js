@@ -2,50 +2,91 @@
 'use strict';
 var jsonPointer = require('simple-json-pointer');
 
-function Alias(source) {
-    this.source = source;
-    this.result = {};
+require('es6-collections');
+
+var dataStore = new WeakMap();
+
+function _iteratePath(target, path) {
+    if (path.length === 0) {
+        return target;
+    }
+    var current = path.shift();
+    if (current === '' && path.length === 0) {
+        return target;
+    }
+    target[current] = _iteratePath(target[current] || {}, path);
+    return target[current];
 }
 
-Alias.prototype.define = function(sourcePath, prop, parser) {
-    if (sourcePath.indexOf('/') === -1) {
-        return;
+function ObjectAlias(source, definitions) {
+    dataStore.set(this, source);
+
+    if (definitions) {
+        definitions.forEach(function (def) {
+            this.define.apply(this, def);
+        }.bind(this));
+    }
+}
+
+ObjectAlias.prototype.define = function(sourcePath, targetPath, parser, alternativeSource) {
+    if (sourcePath.indexOf('#/') === -1) {
+        sourcePath = '#/' + sourcePath;
     }
 
-    var pIndex      = sourcePath.lastIndexOf('/'),
-        sourceProp  = sourcePath.substring(pIndex+1),
-        _this       = this;
+    if (targetPath.indexOf('#/') === -1) {
+        targetPath = '#/' + targetPath;
+    }
 
-    sourcePath = sourcePath.substring(0, pIndex);
+    sourcePath = sourcePath.replace('.', '/');
+    targetPath = targetPath.replace('.', '/');
 
-    Object.defineProperty(this.result, prop, {
+    var sIndex      = sourcePath.lastIndexOf('/'),
+        tIndex      = targetPath.lastIndexOf('/'),
+        sourceProp  = sourcePath.substring(sIndex+1),
+        targetProp  = targetPath.substring(tIndex+1),
+        _this       = this,
+        source      = alternativeSource || dataStore.get(this),
+        target;
+
+    sourcePath = sourcePath.substring(0, sIndex);
+    targetPath = targetPath.substring(0, tIndex+1).replace('#/', '');
+
+    if (targetPath !== '') {
+        target = _iteratePath(this, targetPath.split('/'));
+    } else {
+        target = this;
+    }
+
+    Object.defineProperty(target, targetProp, {
         set: function (val) {
-            var source = jsonPointer(_this.source, sourcePath);
+            var _source = jsonPointer(source, sourcePath);
 
-            if (typeof source !== 'object') {
+            if (typeof _source !== 'object') {
                 return;
             }
 
             if (parser && parser.set) {
-                return (source[sourceProp] = parser.set(val, source[sourceProp]));   
+                return (_source[sourceProp] = parser.set(val, _source[sourceProp]));   
             }
-            return (source[sourceProp] = val);
+            return (_source[sourceProp] = val);
 
         },
         get: function() {
-            var source = jsonPointer(_this.source, sourcePath);
+            var _source = jsonPointer(source, sourcePath);
 
-            if (typeof source !== 'object') {
+            if (typeof _source !== 'object') {
                 return;
             }
 
             if (parser && parser.get) {
-                return parser.get(source[sourceProp]);   
+                return parser.get(_source[sourceProp]);   
             }
 
-            return source[sourceProp]; 
+            return _source[sourceProp]; 
         }
     });
+
+    return this;
 };
 
-module.exports = Alias;
+module.exports = ObjectAlias;

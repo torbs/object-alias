@@ -9,6 +9,9 @@
   "main": "./index.js",
   "keywords": [
     "json-pointer",
+    "mapping",
+    "object",
+    "alias",
     "json"
   ],
   "scripts": {
@@ -30,6 +33,7 @@
     "mocha": "^2.0.1"
   },
   "dependencies": {
-    "simple-json-pointer": "latest"
+    "simple-json-pointer": "latest",
+    "es6-collections": "latest"
   }
 }
